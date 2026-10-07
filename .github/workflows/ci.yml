@@ -1,0 +1,60 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  check:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm run build
+
+      # With yt-dlp and ffmpeg missing and no terminal to ask in, snatch should say what to install and exit 1.
+      - name: Missing tools are reported
+        shell: bash
+        run: |
+          set +e
+          out=$(PATH="$(dirname "$(command -v node)")" node dist/index.js 2>&1)
+          code=$?
+          echo "$out"
+          [ "$code" = 1 ] || { echo "expected exit code 1, got $code"; exit 1; }
+          echo "$out" | grep -q "Missing: yt-dlp, ffmpeg" || { echo "missing-tools message not shown"; exit 1; }
+
+      - name: Reading the clipboard does not crash
+        run: |
+          node --input-type=module -e "const { readClipboard } = await import('./dist/clipboard.js'); const text = await readClipboard(); console.log('clipboard read ok, empty =', text === null)"
+
+      - name: Shortcut is created (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          node dist/index.js setup
+          $lnk = "$env:APPDATA\Microsoft\Windows\Start Menu\Programs\Snatch.lnk"
+          if (-not (Test-Path $lnk)) { throw "shortcut missing" }
+          $icon = (New-Object -ComObject WScript.Shell).CreateShortcut($lnk).IconLocation
+          if ($icon -notlike "*snatch.ico*") { throw "shortcut has no snatch icon: $icon" }
+
+      - name: App is created (macOS)
+        if: runner.os == 'macOS'
+        run: |
+          node dist/index.js setup
+          app="$HOME/Applications/Snatch.app"
+          test -d "$app"
+          plutil -lint "$app/Contents/Info.plist"
+          cmp assets/snatch.icns "$app/Contents/Resources/applet.icns"
+          codesign --verify --deep "$app"
+          sips -g pixelWidth assets/snatch.icns
+          echo "launcher script:"
+          osadecompile "$app/Contents/Resources/Scripts/main.scpt"
