@@ -2,7 +2,7 @@
 import { render } from "ink";
 import { App } from "./App.js";
 import { createShortcut, runsFromNpxCache } from "./setup.js";
-import { askToInstall, findMissingTools, installWithWinget, missingToolsMessage, refreshPath } from "./tools.js";
+import { askToInstall, findMissingTools, installMissing, missingToolsMessage, refreshPath } from "./tools.js";
 
 // `snatch setup` adds a Start Menu shortcut and exits.
 if (process.argv[2] === "setup") {
@@ -19,7 +19,7 @@ if (process.argv[2] === "setup") {
   // Checked before the alternate screen opens, so the messages stay visible in the terminal.
   let missing = await findMissingTools();
   if (missing.length > 0 && process.stdin.isTTY && (await askToInstall(missing))) {
-    installWithWinget(missing);
+    installMissing(missing);
     refreshPath();
     missing = await findMissingTools();
   }

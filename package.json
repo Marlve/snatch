@@ -7,11 +7,16 @@
     "snatch": "dist/index.js"
   },
   "files": [
-    "dist"
+    "dist",
+    "assets"
   ],
   "engines": {
     "node": ">=20"
   },
+  "os": [
+    "win32",
+    "darwin"
+  ],
   "scripts": {
     "dev": "tsx src/index.tsx",
     "build": "tsc --noEmit false --rootDir src --outDir dist",

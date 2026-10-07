@@ -1,15 +1,23 @@
 import { spawn } from "node:child_process";
+import { IS_MAC } from "./platform.js";
 
 const TIMEOUT_MS = 3000;
-const SCRIPT = "[Console]::OutputEncoding = [Text.Encoding]::UTF8; Get-Clipboard -Raw";
+const POWERSHELL_SCRIPT = "[Console]::OutputEncoding = [Text.Encoding]::UTF8; Get-Clipboard -Raw";
+
+// Node has no clipboard API, so this asks the system: PowerShell on Windows (about half a
+// second per call), pbpaste on macOS.
+const [COMMAND, ARGS]: [string, string[]] = IS_MAC
+  ? ["pbpaste", []]
+  : ["powershell.exe", ["-NoProfile", "-NonInteractive", "-Command", POWERSHELL_SCRIPT]];
 
 // The clipboard's text, trimmed, or null when it holds no text or can't be read.
-// Node has no clipboard API, so this asks PowerShell (about half a second per call).
 export function readClipboard(): Promise<string | null> {
   return new Promise((resolve) => {
-    const child = spawn("powershell.exe", ["-NoProfile", "-NonInteractive", "-Command", SCRIPT], {
+    const child = spawn(COMMAND, ARGS, {
       stdio: ["ignore", "pipe", "ignore"],
       windowsHide: true,
+      // pbpaste picks its text encoding from the locale; links must come out as UTF-8.
+      env: IS_MAC ? { ...process.env, LANG: "en_US.UTF-8" } : process.env,
     });
     let out = "";
     const timer = setTimeout(() => {

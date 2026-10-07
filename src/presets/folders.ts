@@ -3,19 +3,21 @@ import { readdir, stat } from "node:fs/promises";
 import { homedir } from "node:os";
 import { basename, join } from "node:path";
 import { OUTPUT_DIR } from "../downloader/download.js";
+import { IS_MAC } from "../platform.js";
 
-export type KnownFolder = { label: "Downloads" | "Music" | "Videos"; path: string };
+export type KnownFolder = { label: "Downloads" | "Music" | "Videos" | "Movies"; path: string };
 
-// The usual places, used until (or unless) Windows answers.
+// The usual places, used until (or unless) Windows answers. A Mac calls its video folder Movies.
 export const USUAL_FOLDERS: KnownFolder[] = [
   { label: "Downloads", path: OUTPUT_DIR },
   { label: "Music", path: join(homedir(), "Music") },
-  { label: "Videos", path: join(homedir(), "Videos") },
+  IS_MAC ? { label: "Movies", path: join(homedir(), "Movies") } : { label: "Videos", path: join(homedir(), "Videos") },
 ];
 
 // Windows can move Music and Videos (OneDrive does), so ask it where they really are.
-// Falls back to the usual places if that fails.
+// Falls back to the usual places if that fails. On a Mac they stay where they are.
 export function knownFolders(): Promise<KnownFolder[]> {
+  if (IS_MAC) return Promise.resolve(USUAL_FOLDERS);
   const script = "[Environment]::GetFolderPath('MyMusic'); [Environment]::GetFolderPath('MyVideos')";
   return new Promise((resolve) => {
     execFile(
@@ -32,7 +34,7 @@ export function knownFolders(): Promise<KnownFolder[]> {
 }
 
 // Folders the search never looks inside: hidden ones, caches, and system folders.
-const SKIP = new Set(["node_modules", "AppData", "$RECYCLE.BIN", "System Volume Information"]);
+const SKIP = new Set(["node_modules", "AppData", "$RECYCLE.BIN", "System Volume Information", ...(IS_MAC ? ["Library"] : [])]);
 const MAX_DEPTH = 8;
 
 // Every folder under the user's home folder, as full paths.
@@ -70,8 +72,12 @@ export function searchFolders(all: string[], query: string, limit: number): stri
 
 // A typed or pasted full path, if it names a folder that exists.
 export async function existingFolder(text: string): Promise<string | null> {
-  const path = text.trim().replace(/^"(.*)"$/, "$1");
-  if (!/^[a-z]:[\\/]/i.test(path) && !path.startsWith("\\\\")) return null;
+  let path = text.trim().replace(/^"(.*)"$/, "$1");
+  if (IS_MAC) {
+    // Shells expand "~"; a pasted or typed path may not have been.
+    if (path === "~" || path.startsWith("~/")) path = join(homedir(), path.slice(1));
+    if (!path.startsWith("/")) return null;
+  } else if (!/^[a-z]:[\\/]/i.test(path) && !path.startsWith("\\\\")) return null;
   try {
     return (await stat(path)).isDirectory() ? path : null;
   } catch {

@@ -28,7 +28,7 @@ type PresetEditorProps = {
 };
 
 const KINDS: PresetKind[] = ["video", "audio"];
-const FOLDER_ITEMS = ["Downloads", "Music", "Videos", "Custom…"];
+const FOLDER_ITEMS = [...USUAL_FOLDERS.map((f) => f.label), "Custom…"];
 const CUSTOM = 3;
 const MAX_RESULTS = 6;
 // Rows the page uses besides the search results, so a short terminal shows fewer results.
