@@ -1,0 +1,46 @@
+{
+  "name": "@marlve/snatch",
+  "version": "1.0.0",
+  "description": "Keyboard-driven terminal downloader for video and audio, built on yt-dlp and FFmpeg",
+  "type": "module",
+  "bin": {
+    "snatch": "dist/index.js"
+  },
+  "files": [
+    "dist"
+  ],
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "dev": "tsx src/index.tsx",
+    "build": "tsc --noEmit false --rootDir src --outDir dist",
+    "typecheck": "tsc --noEmit",
+    "prepublishOnly": "npm run build"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Marlve/snatch.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/Marlve/snatch/issues"
+  },
+  "homepage": "https://github.com/Marlve/snatch#readme",
+  "private": true,
+  "dependencies": {
+    "ink": "^8.0.0",
+    "react": "^19.3.0"
+  },
+  "devDependencies": {
+    "@types/node": "^26.6.4",
+    "@types/react": "^19.3.0",
+    "tsx": "^4.23.15",
+    "typescript": "^7.0.2"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}
