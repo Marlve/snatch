@@ -5,7 +5,7 @@ Download video or audio from almost any site, from your terminal. Keyboard only,
 Inspired by [yoinks](https://github.com/pablostanley/yoinks). Powered by [yt-dlp](https://github.com/yt-dlp/yt-dlp) and [FFmpeg](https://ffmpeg.org).
 
 <p align="center">
-  <img src="docs/screenshots/home.png" alt="snatch home screen with a clipboard suggestion" width="720">
+  <img src="https://raw.githubusercontent.com/Marlve/snatch/main/docs/screenshots/home.png" alt="snatch home screen with a clipboard suggestion" width="720">
 </p>
 
 ## Install
@@ -50,12 +50,12 @@ Run `snatch setup` from a global install, not from `npx`, so the shortcut points
 
 <table>
   <tr>
-    <td><img src="docs/screenshots/options.png" alt="Options: preset, format, quality, file name and size estimate"><br><sub>Options</sub></td>
-    <td><img src="docs/screenshots/downloading.png" alt="A download in progress under the home screen"><br><sub>Download in progress</sub></td>
+    <td><img src="https://raw.githubusercontent.com/Marlve/snatch/main/docs/screenshots/options.png" alt="Options: preset, format, quality, file name and size estimate"><br><sub>Options</sub></td>
+    <td><img src="https://raw.githubusercontent.com/Marlve/snatch/main/docs/screenshots/downloading.png" alt="A download in progress under the home screen"><br><sub>Download in progress</sub></td>
   </tr>
   <tr>
-    <td><img src="docs/screenshots/history.png" alt="History of finished and failed downloads"><br><sub>History</sub></td>
-    <td><img src="docs/screenshots/settings.png" alt="Settings with saved presets"><br><sub>Settings</sub></td>
+    <td><img src="https://raw.githubusercontent.com/Marlve/snatch/main/docs/screenshots/history.png" alt="History of finished and failed downloads"><br><sub>History</sub></td>
+    <td><img src="https://raw.githubusercontent.com/Marlve/snatch/main/docs/screenshots/settings.png" alt="Settings with saved presets"><br><sub>Settings</sub></td>
   </tr>
 </table>
 

@@ -27,14 +27,23 @@
     "type": "git",
     "url": "git+https://github.com/Marlve/snatch.git"
   },
-  "keywords": [],
+  "keywords": [
+    "yt-dlp",
+    "youtube-dl",
+    "downloader",
+    "video",
+    "audio",
+    "cli",
+    "tui",
+    "terminal",
+    "ink"
+  ],
   "author": "",
   "license": "MIT",
   "bugs": {
     "url": "https://github.com/Marlve/snatch/issues"
   },
   "homepage": "https://github.com/Marlve/snatch#readme",
-  "private": true,
   "dependencies": {
     "ink": "^8.0.0",
     "react": "^19.3.0"
