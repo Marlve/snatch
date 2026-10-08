@@ -22,6 +22,13 @@ Or run it once without installing:
 npx @marlve/snatch
 ```
 
+To update, install the latest version again. If you use the browser extension, run `snatch setup` afterwards too, because a release can change how the browser helper is registered:
+
+```sh
+npm install -g @marlve/snatch@latest
+snatch setup
+```
+
 snatch needs yt-dlp and FFmpeg. On launch it checks for both, and if one is missing it offers to install it with winget on Windows or [Homebrew](https://brew.sh) on a Mac. To install them yourself:
 
 ```sh
@@ -49,11 +56,13 @@ Run `snatch setup` from a global install, not from `npx`, so the shortcut points
 
 ## Browser extension
 
-The extension in [`extension/`](extension) sends the video you're watching to snatch. It works on Windows with Chrome and Edge. Firefox is untested.
+The extension in [`extension/`](extension) sends the video you're watching to snatch. It works on Windows with Chrome, Edge and Zen. Firefox uses the same mechanism but is untested.
 
 1. Install snatch and run `snatch setup` (see above). This registers a small helper that the browser starts on its own, with no window.
-2. In Chrome or Edge, open `chrome://extensions` (or `edge://extensions`), turn on Developer mode, choose **Load unpacked** and pick the `extension` folder from a clone of this repo.
-3. Open a page with a video and click the snatch icon. It shows the video's thumbnail and title once yt-dlp has looked at the page, which takes a few seconds. Pages that load a video are checked in the background, so the answer is usually ready by the time you click.
+2. Load the extension from the `extension` folder of a clone of this repo:
+   - Chrome or Edge: open `chrome://extensions` (or `edge://extensions`), turn on Developer mode, choose **Load unpacked** and pick the folder.
+   - Zen or Firefox: open `about:debugging`, choose **This Firefox**, then **Load Temporary Add-on** and pick `manifest.json`. Temporary add-ons are removed when the browser closes. Then open `about:addons`, select the extension and, under **Permissions**, allow access to all websites, which is what lets it check pages in the background.
+3. Open a page with a video and click the snatch icon. It shows the video's thumbnail and title. Each page you look at is checked in the background a moment after it loads, so the answer is usually ready by the time you click. If it isn't, the popup checks then, which takes a few seconds.
 4. Press **Send to Snatch**, or right-click and choose **Download with Snatch**.
 
 If a snatch window is already open, the link lands in its **Incoming** list on the home screen, and no new window appears. Press `↓` to reach the list, `Enter` to open a link, `x` to remove it. A link stays in the list until you download it or remove it, so `Esc` from the Options screen keeps it. If no window is open, one starts with the link already checked. You still pick the format on the Options screen.
