@@ -58,6 +58,8 @@ export function App({ startLink, waitForEnter = false }: AppProps) {
 
   // The download starts here, not inside a screen, so it doesn't depend on which screen is showing.
   function begin(url: string, info: VideoInfo, selection: Selection) {
+    // An incoming link stays listed until it is downloaded (or dismissed), so Esc from Options keeps it.
+    incoming.remove(url);
     setLink("");
     go({ name: "home" });
     start(url, selection, {
@@ -107,10 +109,7 @@ export function App({ startLink, waitForEnter = false }: AppProps) {
                 onHistory={() => go({ name: "history" })}
                 onSettings={() => go({ name: "settings" })}
                 onValid={openOptions}
-                onOpenIncoming={(url, info) => {
-                  incoming.remove(url);
-                  openOptions(url, info);
-                }}
+                onOpenIncoming={openOptions}
               />
             )}
             {screen.name === "options" && (

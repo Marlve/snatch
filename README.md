@@ -56,7 +56,7 @@ The extension in [`extension/`](extension) sends the video you're watching to sn
 3. Open a page with a video and click the snatch icon. It shows the video's thumbnail and title once yt-dlp has looked at the page, which takes a few seconds. Pages that load a video are checked in the background, so the answer is usually ready by the time you click.
 4. Press **Send to Snatch**, or right-click and choose **Download with Snatch**.
 
-If a snatch window is already open, the link lands in its **Incoming** list on the home screen, and no new window appears. Press `↓` to reach the list, `Enter` to open a link, `x` to remove it. If no window is open, one starts with the link already checked. You still pick the format on the Options screen.
+If a snatch window is already open, the link lands in its **Incoming** list on the home screen, and no new window appears. Press `↓` to reach the list, `Enter` to open a link, `x` to remove it. A link stays in the list until you download it or remove it, so `Esc` from the Options screen keeps it. If no window is open, one starts with the link already checked. You still pick the format on the Options screen.
 
 For pages yt-dlp can't read, the popup lists the media files the page loaded instead. Nothing leaves your computer: the helper only runs yt-dlp, which fetches the page from your machine.
 
