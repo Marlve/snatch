@@ -20,6 +20,8 @@ export type VideoInfo = {
   site: string | null;
   // Length in seconds, when the site says.
   duration: number | null;
+  // Address of the video's preview image, when the site gives one.
+  thumbnail: string | null;
   // Distinct video heights, highest first.
   heights: number[];
   hasVideo: boolean;
@@ -64,6 +66,7 @@ export function parseInfo(json: string): VideoInfo | null {
       webpage_url_domain?: string;
       extractor_key?: string;
       duration?: number;
+      thumbnail?: string;
       formats?: RawFormat[];
     };
     const formats = raw.formats ?? [];
@@ -76,6 +79,7 @@ export function parseInfo(json: string): VideoInfo | null {
       uploader: raw.uploader ?? raw.channel ?? null,
       site: raw.webpage_url_domain ?? raw.extractor_key ?? null,
       duration: typeof raw.duration === "number" ? raw.duration : null,
+      thumbnail: typeof raw.thumbnail === "string" && /^https?:\/\//.test(raw.thumbnail) ? raw.thumbnail : null,
       heights: [...heights].sort((a, b) => b - a),
       hasVideo: formats.some(isVideo),
       hasM4a: formats.some(isNativeM4a),

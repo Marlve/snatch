@@ -5,7 +5,7 @@ import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { IS_MAC } from "./platform.js";
 
-function run(file: string, args: string[], env: NodeJS.ProcessEnv = process.env): Promise<void> {
+export function run(file: string, args: string[], env: NodeJS.ProcessEnv = process.env): Promise<void> {
   return new Promise((resolve, reject) => {
     execFile(file, args, { env, windowsHide: true }, (err, _stdout, stderr) =>
       err ? reject(new Error(stderr.trim() || err.message)) : resolve(),
