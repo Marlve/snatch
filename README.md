@@ -34,7 +34,8 @@ brew install yt-dlp ffmpeg                   # macOS
 ```sh
 snatch                # paste a link on the home screen
 snatch <link>         # check the link and go straight to the options
-snatch setup          # add a Start Menu shortcut (Windows) or Snatch.app in ~/Applications (macOS)
+snatch setup          # add a Start Menu shortcut (Windows) or Snatch.app in ~/Applications (macOS),
+                      # and connect the browser extension (Windows)
 ```
 
 Run `snatch setup` from a global install, not from `npx`, so the shortcut points at a copy that stays.
@@ -45,6 +46,19 @@ Run `snatch setup` from a global install, not from `npx`, so the shortcut points
 - **History** lists your last 50 downloads and can show a file in Explorer or Finder.
 - Everything else saves to your Downloads folder.
 - `Esc` goes back. On the home screen, `Esc` twice quits.
+
+## Browser extension
+
+The extension in [`extension/`](extension) sends the video you're watching to snatch. It works on Windows with Chrome and Edge. Firefox is untested.
+
+1. Install snatch and run `snatch setup` (see above). This registers a small helper that the browser starts on its own, with no window.
+2. In Chrome or Edge, open `chrome://extensions` (or `edge://extensions`), turn on Developer mode, choose **Load unpacked** and pick the `extension` folder from a clone of this repo.
+3. Open a page with a video and click the snatch icon. It shows the video's thumbnail and title once yt-dlp has looked at the page, which takes a few seconds. Pages that load a video are checked in the background, so the answer is usually ready by the time you click.
+4. Press **Send to Snatch**, or right-click and choose **Download with Snatch**.
+
+If a snatch window is already open, the link lands in its **Incoming** list on the home screen, and no new window appears. Press `↓` to reach the list, `Enter` to open a link, `x` to remove it. If no window is open, one starts with the link already checked. You still pick the format on the Options screen.
+
+For pages yt-dlp can't read, the popup lists the media files the page loaded instead. Nothing leaves your computer: the helper only runs yt-dlp, which fetches the page from your machine.
 
 ## Screenshots
 
@@ -71,6 +85,7 @@ npm run build           # compile to dist/
 ## Notes
 
 - Windows and macOS only. macOS support is new, so please open an issue if something misbehaves. The first time you open `Snatch.app`, macOS asks once to let it control Terminal.
+- The browser extension and its helper are Windows only for now. `snatch setup` writes a few per-user registry entries for them and needs no admin rights.
 - DRM-protected sites (Spotify and similar) are refused by yt-dlp on purpose.
 
 ## Fair use
