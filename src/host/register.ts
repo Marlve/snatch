@@ -19,27 +19,25 @@ export async function registerNativeHost(): Promise<boolean> {
   if (IS_MAC) return false;
   const dir = join(CONFIG_DIR, "native-host");
   const launcher = join(dir, "snatch-host.cmd");
-  const manifest = join(dir, `${HOST_NAME}.json`);
   const main = fileURLToPath(new URL("./main.js", import.meta.url));
+  const base = { name: HOST_NAME, description: "Snatch helper for the browser extension", path: launcher, type: "stdio" };
+  // Firefox rejects the whole manifest if it has Chrome's allowed_origins, so each family gets its own.
+  const chromeManifest = join(dir, `${HOST_NAME}.json`);
+  const firefoxManifest = join(dir, `${HOST_NAME}.firefox.json`);
 
   mkdirSync(dir, { recursive: true });
   writeFileSync(launcher, `@echo off\r\n"${process.execPath}" "${main}"\r\n`);
   writeFileSync(
-    manifest,
-    JSON.stringify(
-      {
-        name: HOST_NAME,
-        description: "Snatch helper for the browser extension",
-        path: launcher,
-        type: "stdio",
-        allowed_origins: EXTENSION_IDS.map((id) => `chrome-extension://${id}/`),
-        allowed_extensions: FIREFOX_IDS,
-      },
-      null,
-      2,
-    ),
+    chromeManifest,
+    JSON.stringify({ ...base, allowed_origins: EXTENSION_IDS.map((id) => `chrome-extension://${id}/`) }, null, 2),
   );
-  for (const browser of ["Google\\Chrome", "Microsoft\\Edge", "Mozilla"]) {
+  writeFileSync(firefoxManifest, JSON.stringify({ ...base, allowed_extensions: FIREFOX_IDS }, null, 2));
+  const targets: [string, string][] = [
+    ["Google\\Chrome", chromeManifest],
+    ["Microsoft\\Edge", chromeManifest],
+    ["Mozilla", firefoxManifest],
+  ];
+  for (const [browser, manifest] of targets) {
     await run("reg", ["add", `HKCU\\Software\\${browser}\\NativeMessagingHosts\\${HOST_NAME}`, "/ve", "/d", manifest, "/f"]);
   }
   return true;
