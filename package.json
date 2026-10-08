@@ -1,6 +1,6 @@
 {
   "name": "@marlve/snatch",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Keyboard-driven terminal downloader for video and audio, built on yt-dlp and FFmpeg",
   "type": "module",
   "bin": {
