@@ -1,10 +1,12 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Box, Text, useApp, useInput, useWindowSize } from "ink";
 import { DownloadList, listRows } from "./components/DownloadList.js";
 import { ExitWarning } from "./components/ExitWarning.js";
 import { killAll } from "./downloader/processes.js";
 import type { VideoInfo } from "./downloader/info.js";
 import { isRunning, useDownloads } from "./downloader/useDownloads.js";
+import { useIncoming } from "./incoming/useIncoming.js";
+import { listenForLinks } from "./instance.js";
 import { ReservedRows } from "./layout.js";
 import type { Selection } from "./options/formats.js";
 import { estimateBytes } from "./options/size.js";
@@ -18,9 +20,11 @@ type Screen = { name: "home" } | { name: "history" } | { name: "settings" } | { 
 type AppProps = {
   // A link given on the command line (`snatch <link>`): Home checks it and moves on by itself.
   startLink?: string;
+  // `snatch --wait <link>` (opened by the browser extension): Home checks the link, then waits for Enter.
+  waitForEnter?: boolean;
 };
 
-export function App({ startLink }: AppProps) {
+export function App({ startLink, waitForEnter = false }: AppProps) {
   const { exit } = useApp();
   const { columns, rows } = useWindowSize();
   const [screen, setScreen] = useState<Screen>({ name: "home" });
@@ -28,8 +32,11 @@ export function App({ startLink }: AppProps) {
   // The last link sent to Options, so Esc there can bring it back to Home for editing.
   const [link, setLink] = useState(startLink ?? "");
   // Only the first visit to Home follows the command-line link on its own; coming back with Esc waits for Enter.
-  const [autoContinue, setAutoContinue] = useState(startLink !== undefined);
+  const [autoContinue, setAutoContinue] = useState(startLink !== undefined && !waitForEnter);
   const { downloads, start, clearFinished } = useDownloads();
+  // Links the browser extension sends while this window is open wait on Home, not in new windows.
+  const incoming = useIncoming();
+  useEffect(() => listenForLinks(incoming.add), []);
 
   const running = downloads.filter(isRunning);
   // With downloads running, the exit prompt is a full panel instead of one line.
@@ -42,6 +49,11 @@ export function App({ startLink }: AppProps) {
     clearFinished();
     setAutoContinue(false);
     setScreen(next);
+  }
+
+  function openOptions(url: string, info: VideoInfo) {
+    setLink(url);
+    go({ name: "options", url, info });
   }
 
   // The download starts here, not inside a screen, so it doesn't depend on which screen is showing.
@@ -90,11 +102,14 @@ export function App({ startLink }: AppProps) {
                 initialValue={link}
                 autoContinue={autoContinue}
                 paused={confirmingExit}
+                incoming={incoming.items}
+                onDismissIncoming={incoming.remove}
                 onHistory={() => go({ name: "history" })}
                 onSettings={() => go({ name: "settings" })}
-                onValid={(url, info) => {
-                  setLink(url);
-                  go({ name: "options", url, info });
+                onValid={openOptions}
+                onOpenIncoming={(url, info) => {
+                  incoming.remove(url);
+                  openOptions(url, info);
                 }}
               />
             )}

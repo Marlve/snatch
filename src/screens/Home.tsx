@@ -1,11 +1,13 @@
 import type { EventEmitter } from "node:events";
 import { useEffect, useRef, useState } from "react";
 import { Box, Text, useInput, useStdin, useWindowSize } from "ink";
+import { IncomingList } from "../components/IncomingList.js";
 import { Spinner } from "../components/Spinner.js";
 import { Title } from "../components/Title.js";
 import { readClipboard } from "../clipboard.js";
 import type { VideoInfo } from "../downloader/info.js";
 import { checkLink } from "../downloader/validate.js";
+import type { IncomingItem } from "../incoming/useIncoming.js";
 import { COLORS } from "../theme.js";
 
 type Status =
@@ -20,6 +22,10 @@ type HomeProps = {
   onValid: (url: string, info: VideoInfo) => void;
   onHistory: () => void;
   onSettings: () => void;
+  // Links sent from the browser: Enter opens one (once checked), x removes it.
+  incoming: IncomingItem[];
+  onOpenIncoming: (url: string, info: VideoInfo) => void;
+  onDismissIncoming: (url: string) => void;
   // Check the starting link at once and continue to Options by itself when it passes.
   autoContinue?: boolean;
   // True while the exit prompt is open, so its keypress isn't typed into the box.
@@ -42,14 +48,32 @@ const CLIPBOARD_POLL_MS = 2000;
 const AFTER_PASTE_MS = 100;
 const AFTER_TYPING_MS = 700;
 
-export function Home({ initialValue, onValid, onHistory, onSettings, autoContinue = false, paused }: HomeProps) {
+export function Home({
+  initialValue,
+  onValid,
+  onHistory,
+  onSettings,
+  incoming,
+  onOpenIncoming,
+  onDismissIncoming,
+  autoContinue = false,
+  paused,
+}: HomeProps) {
   const [value, setValue] = useState(initialValue);
   const [status, setStatus] = useState<Status>({ kind: "idle" });
   const { columns } = useWindowSize();
   const boxWidth = Math.min(72, columns - 2);
   const [blinkOn, setBlinkOn] = useState(true);
-  // Down from the input moves to the History button, Left/Right switch to Settings, Up comes back.
-  const [focus, setFocus] = useState<"input" | "history" | "settings">("input");
+  // Down from the input moves through the incoming links (if any) to the History button,
+  // Left/Right switch to Settings, Up comes back.
+  const [focus, setFocus] = useState<"input" | "incoming" | "history" | "settings">("input");
+  const [selected, setSelected] = useState(0);
+
+  // A link can leave the list while it has focus (removed, or opened from elsewhere).
+  useEffect(() => {
+    if (incoming.length === 0 && focus === "incoming") setFocus("input");
+    else if (selected >= incoming.length) setSelected(Math.max(0, incoming.length - 1));
+  }, [incoming.length]);
 
   const url = value.trim();
   // Read by async results, which must ignore a link the user has since changed.
@@ -147,13 +171,33 @@ export function Home({ initialValue, onValid, onHistory, onSettings, autoContinu
 
   useInput(
     (input, key) => {
-      if (focus !== "input") {
-        if (key.upArrow) setFocus("input");
-        else if (key.leftArrow) setFocus("history");
+      if (focus === "incoming") {
+        const item = incoming[selected];
+        if (key.upArrow) {
+          if (selected > 0) setSelected(selected - 1);
+          else setFocus("input");
+        } else if (key.downArrow) {
+          if (selected < incoming.length - 1) setSelected(selected + 1);
+          else setFocus("history");
+        } else if (key.return) {
+          if (item?.state.kind === "ready") onOpenIncoming(item.link, item.state.info);
+        } else if (item && (input === "x" || key.backspace || key.delete)) {
+          onDismissIncoming(item.link);
+        }
+      } else if (focus !== "input") {
+        if (key.upArrow) {
+          if (incoming.length > 0) {
+            setSelected(incoming.length - 1);
+            setFocus("incoming");
+          } else setFocus("input");
+        } else if (key.leftArrow) setFocus("history");
         else if (key.rightArrow) setFocus("settings");
         else if (key.return) (focus === "history" ? onHistory : onSettings)();
       } else if (key.downArrow) {
-        setFocus("history");
+        if (incoming.length > 0) {
+          setSelected(0);
+          setFocus("incoming");
+        } else setFocus("history");
       } else if (key.tab) {
         // Same as pasting that link: it fills the box and starts the check.
         if (empty && suggestion) edit(() => suggestion, true);
@@ -213,8 +257,10 @@ export function Home({ initialValue, onValid, onHistory, onSettings, autoContinu
         {status.kind === "idle" && (
           <Text dimColor>
             {focus === "input"
-              ? `${empty && suggestion ? "Tab to paste from clipboard" : "Enter to continue"} · ↓ history · Esc to exit`
-              : `Enter to open ${focus} · ←→ switch · ↑ back to the link · Esc to exit`}
+              ? `${empty && suggestion ? "Tab to paste from clipboard" : "Enter to continue"} · ↓ ${incoming.length > 0 ? "incoming" : "history"} · Esc to exit`
+              : focus === "incoming"
+                ? "Enter to open · x to remove · ↑↓ move · Esc to exit"
+                : `Enter to open ${focus} · ←→ switch · ↑ back · Esc to exit`}
           </Text>
         )}
         {status.kind === "checking" && (
@@ -231,6 +277,9 @@ export function Home({ initialValue, onValid, onHistory, onSettings, autoContinu
           <Text color={COLORS.error} wrap="truncate-end">{`✗ ${status.message}`}</Text>
         )}
       </Box>
+      {incoming.length > 0 && (
+        <IncomingList items={incoming} selected={focus === "incoming" ? selected : null} width={boxWidth} />
+      )}
       <Box marginTop={1}>
         {(["history", "settings"] as const).map((target) => (
           <Box key={target} marginX={1}>
