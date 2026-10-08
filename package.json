@@ -21,6 +21,7 @@
     "dev": "tsx src/index.tsx",
     "build": "tsc --noEmit false --rootDir src --outDir dist",
     "typecheck": "tsc --noEmit",
+    "package:extension": "node scripts/package-extension.mjs",
     "prepublishOnly": "npm run build"
   },
   "repository": {
