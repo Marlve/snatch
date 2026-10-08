@@ -89,11 +89,22 @@ function message(text) {
   view.replaceChildren(el("p", "dim", text));
 }
 
+// Without access to all sites the background check never sees a page's media, so every popup
+// open waits on a fresh lookup. Firefox does not grant this by default.
+async function warnIfNoSiteAccess() {
+  const granted = await api.permissions.contains({ origins: ["<all_urls>"] }).catch(() => true);
+  if (granted) return;
+  view.after(
+    el("p", "dim", "Pages can't be checked ahead of time: allow this extension access to all sites in the browser's add-on settings (Permissions)."),
+  );
+}
+
 const [tab] = await api.tabs.query({ active: true, currentWindow: true });
 if (!tab?.url?.startsWith("http")) {
   message("Open a page with a video.");
 } else {
   message("Checking this page…");
+  warnIfNoSiteAccess();
   const info = await send({ type: "info", url: tab.url });
   const found = ((await api.storage.session.get(`tab:${tab.id}`))[`tab:${tab.id}`] ?? []).slice().reverse();
 

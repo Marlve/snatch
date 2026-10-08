@@ -35,7 +35,8 @@ function connect() {
   next.onDisconnect.addListener(() => {
     // A missing registration shows up here, not as an exception when connecting.
     const reason = (next.error ?? api.runtime.lastError)?.message ?? "";
-    const message = /not found|forbidden|no such native|permission/i.test(reason) ? NOT_INSTALLED : "The Snatch helper stopped.";
+    const base = /not found|forbidden|no such native|permission/i.test(reason) ? NOT_INSTALLED : "The Snatch helper stopped.";
+    const message = reason ? `${base} (${reason})` : base;
     port = null;
     for (const resolve of waiting.values()) resolve({ ok: false, message, helper: true });
     waiting.clear();
