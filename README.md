@@ -67,7 +67,7 @@ The extension in [`extension/`](extension) sends the video you're watching to sn
 
 If a snatch window is already open, the link lands in its **Incoming** list on the home screen, and no new window appears. Press `↓` to reach the list, `Enter` to open a link, `x` to remove it. A link stays in the list until you download it or remove it, so `Esc` from the Options screen keeps it. If no window is open, one starts with the link already checked. You still pick the format on the Options screen.
 
-For pages yt-dlp can't read, the popup lists the media files the page loaded instead. Nothing leaves your computer: the helper only runs yt-dlp, which fetches the page from your machine.
+For pages yt-dlp can't read, the popup lists the media files the page loaded instead. Nothing leaves your computer: the helper only runs yt-dlp, which fetches the page from your machine. See the [privacy policy](docs/privacy-policy.md).
 
 ## Screenshots
 
@@ -89,6 +89,7 @@ npm install
 npm run dev -- <link>   # run from source
 npm run typecheck
 npm run build           # compile to dist/
+npm run package:extension   # zip the extension for the Chrome and Firefox stores into build/
 ```
 
 ## Notes
