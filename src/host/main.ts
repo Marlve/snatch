@@ -14,9 +14,13 @@ type Request = { type: "info" | "open"; id: number; url: string };
 // No whitespace or quotes: the link is placed inside quotes when a window is started.
 const LINK = /^https?:\/\/[^\s"]+$/i;
 const SNATCH = fileURLToPath(new URL("../index.js", import.meta.url));
+// The window is created through WMI so it is not a child of this helper: Firefox and Zen end
+// everything the helper started when it exits, which closed the window ~20 s after it opened.
 const START_SCRIPT =
-  "Start-Process -FilePath $env:SNATCH_NODE -WorkingDirectory $env:USERPROFILE " +
-  `-ArgumentList ('"' + $env:SNATCH_ENTRY + '"'), '--wait', ('"' + $env:SNATCH_LINK + '"')`;
+  `$cmd = '"' + $env:SNATCH_NODE + '" "' + $env:SNATCH_ENTRY + '" --wait "' + $env:SNATCH_LINK + '"'; ` +
+  "$r = Invoke-CimMethod -ClassName Win32_Process -MethodName Create " +
+  "-Arguments @{ CommandLine = $cmd; CurrentDirectory = $env:USERPROFILE }; " +
+  "if ($r.ReturnValue -ne 0) { exit 1 }";
 const STARTUP_WAIT_MS = 15_000;
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
@@ -45,8 +49,8 @@ async function open({ id, url }: Request): Promise<void> {
   }
 
   launchedAt = Date.now();
-  // Start-Process gives the new window its own console; spawning node directly from here would
-  // hand it the browser's pipes instead. The PowerShell that runs it is hidden and exits at once.
+  // The new window gets its own console; spawning node directly from here would hand it the
+  // browser's pipes instead. The PowerShell that starts it is hidden and exits at once.
   // The link travels in the environment, never in the script text.
   const child = spawn("powershell.exe", ["-NoProfile", "-NonInteractive", "-Command", START_SCRIPT], {
     stdio: "ignore",
