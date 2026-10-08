@@ -89,7 +89,7 @@ function message(text) {
   view.replaceChildren(el("p", "dim", text));
 }
 
-// Without access to all sites the background check never sees a page's media, so every popup
+// Without access to all sites the background check can't read a tab's address, so every popup
 // open waits on a fresh lookup. Firefox does not grant this by default.
 async function warnIfNoSiteAccess() {
   const granted = await api.permissions.contains({ origins: ["<all_urls>"] }).catch(() => true);

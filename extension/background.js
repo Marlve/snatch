@@ -44,17 +44,38 @@ api.webRequest.onHeadersReceived.addListener(
   ["responseHeaders"],
 );
 
-// yt-dlp takes several seconds to describe a page, so start as soon as the page has loaded media
-// and the popup finds the answer waiting. Only pages that load media qualify: asking yt-dlp
-// about every page visited would fetch each one a second time.
-async function prefetch(tabId) {
+// yt-dlp takes several seconds to describe a page, so it runs in the background and the popup
+// finds the answer waiting. It asks about every page the user looks at, which fetches each one a
+// second time: only the visible tab, after the page settles, and each link only once (answers
+// are cached, including "no video here").
+async function prefetch(tabId, onlyVisible = false) {
   try {
-    const { url } = await api.tabs.get(tabId);
-    if (isWeb(url)) await getInfo(url);
+    const { url, active } = await api.tabs.get(tabId);
+    if (isWeb(url) && (active || !onlyVisible)) await getInfo(url);
   } catch {
     // The tab closed meanwhile; nothing to warm up.
   }
 }
+
+// Pages that change address without loading (YouTube, Reddit) count too, so wait for the address
+// to stop changing before asking.
+const SETTLE_MS = 1500;
+const settling = new Map();
+function checkSoon(tabId) {
+  clearTimeout(settling.get(tabId));
+  settling.set(
+    tabId,
+    setTimeout(() => {
+      settling.delete(tabId);
+      prefetch(tabId, true);
+    }, SETTLE_MS),
+  );
+}
+
+api.tabs.onUpdated.addListener((tabId, change) => {
+  if (change.status === "complete" || change.url) checkSoon(tabId);
+});
+api.tabs.onActivated.addListener(({ tabId }) => checkSoon(tabId));
 
 // A new page in the tab starts a fresh list.
 api.webRequest.onBeforeRequest.addListener(
@@ -99,6 +120,8 @@ api.contextMenus.onClicked.addListener(async (info, tab) => {
 });
 
 api.tabs.onRemoved.addListener((tabId) => {
+  clearTimeout(settling.get(tabId));
+  settling.delete(tabId);
   enqueue(() => api.storage.session.remove(key(tabId)));
 });
 
